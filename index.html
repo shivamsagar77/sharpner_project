@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple API Call</title>
+</head>
+<body>
+  <h1>Submit Data & Fetch Response</h1>
+
+  <!-- ✅ यहाँ backend से आया data दिखेगा -->
+  <div id="backendData" style="font-size: 20px; font-weight: bold; color: green; margin-bottom: 10px;">
+    Loading...
+  </div>
+
+  <!-- Input field -->
+  <input type="text" id="userInput" placeholder="Enter something..." />
+
+  <!-- Submit button -->
+  <button id="submitBtn">Submit</button>
+
+<script>
+  const submitBtn = document.getElementById('submitBtn');
+  const userInput = document.getElementById('userInput');
+  const backendDataDiv = document.getElementById('backendData');
+
+  // ✅ एक बार पेज लोड होते ही backend से data दिखा दो
+  window.addEventListener("DOMContentLoaded", fetchAndShowData);
+
+  submitBtn.addEventListener('click', async () => {
+    const value = userInput.value.trim();
+
+    if (!value) {
+      alert('Please enter something!');
+      return;
+    }
+
+    try {
+      // ✅ 1. POST API call
+      await fetch('http://localhost:5000/api/demopost', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ input: value })
+      });
+
+      // ✅ POST के बाद नया data दिखाओ
+      fetchAndShowData();
+
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Something went wrong!');
+    }
+  });
+
+  // ✅ Function: backend से data fetch करो और ऊपर दिखाओ
+  async function fetchAndShowData() {
+    try {
+      const getResponse = await fetch('http://localhost:5000/api/demopost');
+      const getResult = await getResponse.json();
+
+      if (getResult.success && getResult.data) {
+        const formattedInput = getResult.data.input.replace(/ /g, '+');
+        backendDataDiv.textContent = formattedInput;
+      } else {
+        backendDataDiv.textContent = "No data yet...";
+      }
+
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      backendDataDiv.textContent = "Error loading data!";
+    }
+  }
+</script>
+
+</body>
+</html>
