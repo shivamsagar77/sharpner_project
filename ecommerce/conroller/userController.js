@@ -1,22 +1,21 @@
-const pool = require('../config/db');
+const userService = require('../services/userService');
 
-const UserController = {
-
-  // ✅ GET API → हमेशा latest data लाना
+const userController = {
   data: async (req, res) => {
-  res.send('Fetching all users');
-},
+    const result = await userService.fetchAllUsers();
+    res.send(result);
+  },
 
-  // ✅ POST API → पहली बार insert, बाद में update
-  postData: async  (req, res) => {
-  res.send('Adding a new user');
-},
+  postData: async (req, res) => {
+    const result = await userService.addNewUser();
+    res.send(result);
+  },
 
-dataById: async (req, res) => {
-  const { id } = req.params;
-  res.send(`Fetching user with ID: ${id}`);
-}
-
+  dataById: async (req, res) => {
+    const { id } = req.params;
+    const result = await userService.fetchUserById(id);
+    res.send(result);
+  }
 };
 
-module.exports = UserController;
+module.exports = userController;

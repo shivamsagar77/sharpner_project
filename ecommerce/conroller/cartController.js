@@ -1,18 +1,17 @@
-const pool = require('../config/db');
+const cartService = require('../services/cartService');
 
-const cardController = {
+const cartController = {
+  data: async (req, res) => {
+    const { userId } = req.params;
+    const result = await cartService.fetchCartForUser(userId);
+    res.send(result);
+  },
 
-  // ✅ GET API → हमेशा latest data लाना
-  data: async  (req, res) => {
-  const { userId } = req.params;
-  res.send(`Fetching cart for user with ID: ${userId}`);
-},
-
-  // ✅ POST API → पहली बार insert, बाद में update
   postData: async (req, res) => {
-  const { userId } = req.params;
-  res.send(`Adding product to cart for user with ID: ${userId}`);
-}
+    const { userId } = req.params;
+    const result = await cartService.addProductToCart(userId);
+    res.send(result);
+  }
 };
 
-module.exports = cardController;
+module.exports = cartController;

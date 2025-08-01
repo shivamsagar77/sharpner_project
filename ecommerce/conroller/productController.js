@@ -1,22 +1,21 @@
-const pool = require('../config/db');
+const productService = require('../services/productService');
 
 const productController = {
-
-  // ✅ GET API → हमेशा latest data लाना
   data: async (req, res) => {
-  res.send('Fetching all products');
-},
+    const result = await productService.fetchAllProducts();
+    res.send(result);
+  },
 
-  // ✅ POST API → पहली बार insert, बाद में update
   postData: async (req, res) => {
-  res.send('Adding a new product');
-},
+    const result = await productService.addNewProduct();
+    res.send(result);
+  },
 
-dataById: async (req, res) => {
-  const { id } = req.params;
-  res.send(`Fetching product with ID: ${id}`);
-}
-
+  dataById: async (req, res) => {
+    const { id } = req.params;
+    const result = await productService.fetchProductById(id);
+    res.send(result);
+  }
 };
 
 module.exports = productController;
