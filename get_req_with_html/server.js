@@ -5,18 +5,27 @@ const path = require('path');
 const app = express();
 const PORT = 3000;
 
-// Middleware to parse form data
+// Middleware to parse JSON and form data
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve HTML form
+// GET: Serve the form
 app.get('/api/products', (req, res) => {
   res.sendFile(path.join(__dirname, 'VIEW', 'productForm.html'));
 });
 
-// Handle form submission (for testing POST data)
+// POST: Receive form data (from Axios or Postman)
 app.post('/api/products', (req, res) => {
   const { productName } = req.body;
-  res.send(`Product "${productName}" added successfully!`);
+
+  // Log received data
+  console.log('Received Product:', productName);
+
+  // Respond to client
+  res.json({
+    message: `Product "${productName}" added successfully!`,
+    product: productName
+  });
 });
 
 // Start server
