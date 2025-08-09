@@ -1,124 +1,43 @@
-const User = require('../models/User');
+// controllers/userPostController.js
+const { User, Post } = require('../models');
 
-const bus_booking_appController = {
-  // Create a new user
-  create_user: async (req, res) => {
-    const { name, email } = req.body;
-
+const userPostController = {
+  // Create user with posts (optional)
+  createUser: async (req, res) => {
     try {
-      const newUser = await User.create({ name, email });
-      console.log('User inserted:', newUser.toJSON());
+      const { name, email, posts } = req.body; // posts is an array of post objects
 
-      res.status(201).json({
-        success: true,
-        message: 'User created successfully',
-        data: newUser,
-      });
+      const user = await User.create(
+        { name, email, Posts: posts },
+        { include: [Post] } // To create associated posts too
+      );
+
+      res.status(201).json({ success: true, data: user });
     } catch (error) {
-      console.error('❌ Create user error:', error);
-      if (error.name === 'SequelizeUniqueConstraintError') {
-        return res.status(400).json({ success: false, message: 'Email must be unique' });
-      }
-      res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-      });
+      console.error('Create user error:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
   },
 
-  // Get user by id
-  get_user: async (req, res) => {
-    const { id } = req.params;
-
+  // Get user with all posts
+  getUserWithPosts: async (req, res) => {
     try {
-      const user = await User.findByPk(id);
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'User not found',
-        });
-      }
+      const { id } = req.params;
 
-      res.status(200).json({
-        success: true,
-        data: user,
+      const user = await User.findByPk(id, {
+        include: Post, // Include all posts related to this user
       });
-    } catch (error) {
-      console.error('❌ Get user error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-      });
-    }
-  },
-
-  // Update user by id
-  update_user: async (req, res) => {
-    const { id } = req.params;
-    const { name, email } = req.body;
-
-    try {
-      const user = await User.findByPk(id);
 
       if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'User not found for update',
-        });
+        return res.status(404).json({ success: false, message: 'User not found' });
       }
 
-      await user.update({ name, email });
-
-      console.log('User updated:', user.toJSON());
-
-      res.status(200).json({
-        success: true,
-        message: 'User updated successfully',
-        data: user,
-      });
+      res.status(200).json({ success: true, data: user });
     } catch (error) {
-      console.error('❌ Update user error:', error);
-      if (error.name === 'SequelizeUniqueConstraintError') {
-        return res.status(400).json({ success: false, message: 'Email must be unique' });
-      }
-      res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-      });
+      console.error('Get user with posts error:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-  },
-
-  // Delete user by id
-  delete_user: async (req, res) => {
-    const { id } = req.params;
-
-    try {
-      const user = await User.findByPk(id);
-
-      if (!user) {
-        return res.status(404).json({
-          success: false,
-          message: 'User not found for delete',
-        });
-      }
-
-      await user.destroy();
-
-      console.log('User deleted:', user.toJSON());
-
-      res.status(200).json({
-        success: true,
-        message: 'User deleted successfully',
-        data: user,
-      });
-    } catch (error) {
-      console.error('❌ Delete user error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-      });
-    }
-  },
+  }
 };
 
-module.exports = bus_booking_appController;
+module.exports = userPostController;
