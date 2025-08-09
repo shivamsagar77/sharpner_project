@@ -1,52 +1,38 @@
-const pool = require('../config/db');
+const User = require('../models/User');
 
 const bus_booking_appController = {
   // Create a new user
   create_user: async (req, res) => {
-    let client;
     const { name, email } = req.body;
 
     try {
-      client = await pool.connect();
-
-      const insertQuery = `
-        INSERT INTO users (name, email)
-        VALUES ($1, $2)
-        RETURNING *`;
-      const insertValues = [name, email];
-      const insertResult = await client.query(insertQuery, insertValues);
-
-      console.log('User inserted:', insertResult.rows[0]);
+      const newUser = await User.create({ name, email });
+      console.log('User inserted:', newUser.toJSON());
 
       res.status(201).json({
         success: true,
         message: 'User created successfully',
-        data: insertResult.rows[0],
+        data: newUser,
       });
-
     } catch (error) {
-      console.error('❌ Query error:', error);
+      console.error('❌ Create user error:', error);
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        return res.status(400).json({ success: false, message: 'Email must be unique' });
+      }
       res.status(500).json({
         success: false,
         message: 'Internal Server Error',
       });
-    } finally {
-      if (client) client.release();
     }
   },
 
   // Get user by id
   get_user: async (req, res) => {
-    let client;
     const { id } = req.params;
 
     try {
-      client = await pool.connect();
-
-      const selectQuery = 'SELECT * FROM users WHERE id = $1';
-      const result = await client.query(selectQuery, [id]);
-
-      if (result.rows.length === 0) {
+      const user = await User.findByPk(id);
+      if (!user) {
         return res.status(404).json({
           success: false,
           message: 'User not found',
@@ -55,97 +41,82 @@ const bus_booking_appController = {
 
       res.status(200).json({
         success: true,
-        data: result.rows[0],
+        data: user,
       });
-
     } catch (error) {
-      console.error('❌ Query error:', error);
+      console.error('❌ Get user error:', error);
       res.status(500).json({
         success: false,
         message: 'Internal Server Error',
       });
-    } finally {
-      if (client) client.release();
     }
   },
 
   // Update user by id
   update_user: async (req, res) => {
-    let client;
     const { id } = req.params;
     const { name, email } = req.body;
 
     try {
-      client = await pool.connect();
+      const user = await User.findByPk(id);
 
-      const updateQuery = `
-        UPDATE users 
-        SET name = $1, email = $2
-        WHERE id = $3
-        RETURNING *`;
-      const updateValues = [name, email, id];
-      const updateResult = await client.query(updateQuery, updateValues);
-
-      if (updateResult.rows.length === 0) {
+      if (!user) {
         return res.status(404).json({
           success: false,
           message: 'User not found for update',
         });
       }
 
-      console.log('User updated:', updateResult.rows[0]);
+      await user.update({ name, email });
+
+      console.log('User updated:', user.toJSON());
 
       res.status(200).json({
         success: true,
         message: 'User updated successfully',
-        data: updateResult.rows[0],
+        data: user,
       });
-
     } catch (error) {
-      console.error('❌ Query error:', error);
+      console.error('❌ Update user error:', error);
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        return res.status(400).json({ success: false, message: 'Email must be unique' });
+      }
       res.status(500).json({
         success: false,
         message: 'Internal Server Error',
       });
-    } finally {
-      if (client) client.release();
     }
   },
 
   // Delete user by id
   delete_user: async (req, res) => {
-    let client;
     const { id } = req.params;
 
     try {
-      client = await pool.connect();
+      const user = await User.findByPk(id);
 
-      const deleteQuery = 'DELETE FROM users WHERE id = $1 RETURNING *';
-      const deleteResult = await client.query(deleteQuery, [id]);
-
-      if (deleteResult.rows.length === 0) {
+      if (!user) {
         return res.status(404).json({
           success: false,
           message: 'User not found for delete',
         });
       }
 
-      console.log('User deleted:', deleteResult.rows[0]);
+      await user.destroy();
+
+      console.log('User deleted:', user.toJSON());
 
       res.status(200).json({
         success: true,
         message: 'User deleted successfully',
-        data: deleteResult.rows[0],
+        data: user,
       });
-
     } catch (error) {
-      console.error('❌ Query error:', error);
+      console.error('❌ Delete user error:', error);
       res.status(500).json({
         success: false,
         message: 'Internal Server Error',
       });
-    } finally {
-      if (client) client.release();
     }
   },
 };

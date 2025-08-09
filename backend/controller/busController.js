@@ -1,153 +1,88 @@
-const pool = require('../config/db');
+const Bustable = require('../models/Bustable');
 
 const busController = {
-  // Create a new bus entry
-  create_bus: async (req, res) => {
-    let client;
-    const { busNumber, total_busseat, available_seat } = req.body;
-
+  createBus: async (req, res) => {
     try {
-      client = await pool.connect();
+      const { busNumber, total_busseat, avaialabe_seat } = req.body;
 
-      const insertQuery = `
-        INSERT INTO bustable (busNumber, total_busseat, avaialabe_seat)
-        VALUES ($1, $2, $3)
-        RETURNING *`;
-      const values = [busNumber, total_busseat, available_seat];
-      const result = await client.query(insertQuery, values);
+      const newBus = await Bustable.create({ busNumber, total_busseat, avaialabe_seat });
 
-      console.log('Bus inserted:', result.rows[0]);
-
-      res.status(201).json({
-        success: true,
-        message: 'Bus created successfully',
-        data: result.rows[0],
-      });
-
+      console.log('Bus created:', newBus.toJSON());
+      res.status(201).json({ success: true, data: newBus });
     } catch (error) {
-      console.error('❌ Query error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-      });
-    } finally {
-      if (client) client.release();
+      console.error('Create bus error:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
   },
 
-  // Get bus by ID
-  get_bus: async (req, res) => {
-    let client;
-    const { id } = req.params;
-
+  getAllBuses: async (req, res) => {
     try {
-      client = await pool.connect();
+      const buses = await Bustable.findAll();
+      res.status(200).json({ success: true, data: buses });
+    } catch (error) {
+      console.error('Get all buses error:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+  },
 
-      const query = 'SELECT * FROM bustable WHERE id = $1';
-      const result = await client.query(query, [id]);
+  getBusById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const bus = await Bustable.findByPk(id);
 
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Bus not found',
-        });
+      if (!bus) {
+        console.log('Bus not found with ID:', id);
+        return res.status(404).json({ success: false, message: 'Bus not found' });
       }
 
-      res.status(200).json({
-        success: true,
-        data: result.rows[0],
-      });
-
+      res.status(200).json({ success: true, data: bus });
     } catch (error) {
-      console.error('❌ Query error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-      });
-    } finally {
-      if (client) client.release();
+      console.error('Get bus by ID error:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
   },
 
-  // Update bus by ID
-  update_bus: async (req, res) => {
-    let client;
-    const { id } = req.params;
-    const { busNumber, total_busseat, available_seat } = req.body;
-
+  updateBus: async (req, res) => {
     try {
-      client = await pool.connect();
+      const { id } = req.params;
+      const { busNumber, total_busseat, avaialabe_seat } = req.body;
 
-      const updateQuery = `
-        UPDATE bustable
-        SET busNumber = $1, total_busseat = $2, avaialabe_seat = $3
-        WHERE id = $4
-        RETURNING *`;
-      const values = [busNumber, total_busseat, available_seat, id];
-      const result = await client.query(updateQuery, values);
+      const bus = await Bustable.findByPk(id);
 
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Bus not found for update',
-        });
+      if (!bus) {
+        console.log('Update failed: Bus not found with ID:', id);
+        return res.status(404).json({ success: false, message: 'Bus not found' });
       }
 
-      console.log('Bus updated:', result.rows[0]);
+      await bus.update({ busNumber, total_busseat, avaialabe_seat });
 
-      res.status(200).json({
-        success: true,
-        message: 'Bus updated successfully',
-        data: result.rows[0],
-      });
-
+      console.log('Bus updated:', bus.toJSON());
+      res.status(200).json({ success: true, data: bus });
     } catch (error) {
-      console.error('❌ Query error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-      });
-    } finally {
-      if (client) client.release();
+      console.error('Update bus error:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
   },
 
-  // Delete bus by ID
-  delete_bus: async (req, res) => {
-    let client;
-    const { id } = req.params;
-
+  deleteBus: async (req, res) => {
     try {
-      client = await pool.connect();
+      const { id } = req.params;
+      const bus = await Bustable.findByPk(id);
 
-      const deleteQuery = 'DELETE FROM bustable WHERE id = $1 RETURNING *';
-      const result = await client.query(deleteQuery, [id]);
-
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: 'Bus not found for delete',
-        });
+      if (!bus) {
+        console.log('Delete failed: Bus not found with ID:', id);
+        return res.status(404).json({ success: false, message: 'Bus not found' });
       }
 
-      console.log('Bus deleted:', result.rows[0]);
+      await bus.destroy();
+      console.log('Bus deleted:', bus.toJSON());
 
-      res.status(200).json({
-        success: true,
-        message: 'Bus deleted successfully',
-        data: result.rows[0],
-      });
-
+      res.status(200).json({ success: true, message: 'Bus deleted successfully' });
     } catch (error) {
-      console.error('❌ Query error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Internal Server Error',
-      });
-    } finally {
-      if (client) client.release();
+      console.error('Delete bus error:', error);
+      res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
-  },
+  }
 };
 
 module.exports = busController;
