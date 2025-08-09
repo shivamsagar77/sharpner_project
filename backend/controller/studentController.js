@@ -1,4 +1,5 @@
 const pool = require('../config/db'); // adjust path accordingly
+const Student = require('../models/Student');
 
 const studentController = {
   createStudent: async (req, res) => {
