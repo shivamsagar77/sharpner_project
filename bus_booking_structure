@@ -1,0 +1,20 @@
+create table users (
+    id  SERIAL Primary key ,
+    name varchar(100),
+    email varchar(1000)
+)
+create table bustable(
+    id  SERIAL Primary key,
+    busNumber int,
+    total_busseat int ,
+    avaialabe_seat int 
+)
+create table booking_table(
+    id SERIAL Primary key,
+    int seat_number
+)
+create table payment_table(
+    id SERIAL Primary key,
+    amount_paid int,
+    payment_status boolean
+)
