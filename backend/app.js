@@ -4,6 +4,7 @@
   const feedbackRoutes = require("./routes/feedbackRoutes");
   const { pool } = require("./config/db"); // ✅ Import DB pool
   const demopost = require("./routes/demoPost"); // Import demoPost routes
+  const bus_booking_app = require('./routes/bus_booking_app')
   // Middleware
   app.use(cors());
   app.use(express.json()); // Parse incoming JSON
@@ -16,6 +17,7 @@
     res.send("Welcome to the Feedback API");
   });
 
+  app.use("/api/bus_booking_app",bus_booking_app)
   // ✅ Set correct PORT (5000, not 500)
   const PORT = 5000;
 
