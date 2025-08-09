@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Appointment Booking</title>
+</head>
+<body>
+  <h1>Register Appointment</h1>
+  <form id="userForm">
+    <input type="text" name="name" placeholder="Name" required/><br/>
+    <input type="email" name="email" placeholder="Email" required/><br/>
+    <input type="tel" name="phone" placeholder="Phone"/><br/>
+    <input type="date" name="appointment_date" placeholder="Appointment Date" required/><br/>
+    <button type="submit">Submit</button>
+  </form>
+
+  <h2>Registered Users</h2>
+  <ul id="usersList"></ul>
+
+  <script>
+    const form = document.getElementById('userForm');
+    const usersList = document.getElementById('usersList');
+
+    async function fetchUsers() {
+      const res = await fetch('http://localhost:3000/api/users');
+      const data = await res.json();
+      usersList.innerHTML = '';
+      if(data.success) {
+        data.users.forEach(user => {
+          const li = document.createElement('li');
+          li.textContent = `${user.name} (${user.email}) - Appointment: ${user.appointment_date}`;
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Delete';
+          delBtn.onclick = async () => {
+            await fetch(`http://localhost:3000/api/users/${user.id}`, { method: 'DELETE' });
+            fetchUsers();
+          };
+          li.appendChild(delBtn);
+          usersList.appendChild(li);
+        });
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const userData = Object.fromEntries(formData.entries());
+      const res = await fetch('http://localhost:3000/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+      const data = await res.json();
+      if(data.success) {
+        alert('User Registered');
+        form.reset();
+        fetchUsers();
+      } else {
+        alert(data.message || 'Error');
+      }
+    });
+
+    fetchUsers();
+  </script>
+</body>
+</html>
