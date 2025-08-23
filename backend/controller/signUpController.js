@@ -10,6 +10,16 @@ const signUpController = {
         return res.status(400).json({ message: "All fields are required" });
       }
 
+      // check if user already exists
+      const checkUser = await pool.query(
+        "SELECT * FROM signup WHERE email = $1",
+        [email]
+      );
+
+      if (checkUser.rows.length > 0) {
+        return res.status(409).json({ message: "User already exists with this email" });
+      }
+
       const created_at = new Date();
 
       const query = `
